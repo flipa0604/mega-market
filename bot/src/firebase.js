@@ -1,14 +1,30 @@
 const admin = require('firebase-admin');
 const config = require('./config');
+const path = require('path');
+
+function getCredential() {
+  const jsonPath =
+    process.env.GOOGLE_APPLICATION_CREDENTIALS ||
+    process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+  if (jsonPath) {
+    const fs = require('fs');
+    const fullPath = path.isAbsolute(jsonPath) ? jsonPath : path.resolve(process.cwd(), jsonPath);
+    const json = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+    return admin.credential.cert(json);
+  }
+  const { projectId, clientEmail, privateKey } = config.firebase;
+  if (!projectId || !clientEmail || !privateKey) {
+    throw new Error('Firebase: set GOOGLE_APPLICATION_CREDENTIALS (or .env: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY)');
+  }
+  return admin.credential.cert({
+    projectId,
+    clientEmail,
+    privateKey,
+  });
+}
 
 if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: config.firebase.projectId,
-      clientEmail: config.firebase.clientEmail,
-      privateKey: config.firebase.privateKey,
-    }),
-  });
+  admin.initializeApp({ credential: getCredential() });
 }
 
 const db = admin.firestore();
