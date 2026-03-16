@@ -1,21 +1,35 @@
 const admin = require('firebase-admin');
 const config = require('./config');
 const path = require('path');
+const fs = require('fs');
 
 function getCredential() {
-  const jsonPath =
+  let jsonPath =
     process.env.GOOGLE_APPLICATION_CREDENTIALS ||
     process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+  if (!jsonPath) {
+    const defaultPath = path.resolve(process.cwd(), 'serviceAccount.json');
+    if (fs.existsSync(defaultPath)) jsonPath = defaultPath;
+  }
   if (jsonPath) {
-    const fs = require('fs');
     const fullPath = path.isAbsolute(jsonPath) ? jsonPath : path.resolve(process.cwd(), jsonPath);
+    if (!fs.existsSync(fullPath)) {
+      throw new Error(`Firebase: credential file not found: ${fullPath}`);
+    }
     const json = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+    if (!json.private_key || !json.client_email) {
+      throw new Error('Firebase: invalid serviceAccount.json (missing private_key or client_email)');
+    }
+    console.log('Firebase: using credentials from', fullPath);
     return admin.credential.cert(json);
   }
   const { projectId, clientEmail, privateKey } = config.firebase;
   if (!projectId || !clientEmail || !privateKey) {
-    throw new Error('Firebase: set GOOGLE_APPLICATION_CREDENTIALS (or .env: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY)');
+    throw new Error(
+      'Firebase: no credentials. Put serviceAccount.json in the bot folder, or set in .env: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY'
+    );
   }
+  console.log('Firebase: using credentials from .env');
   return admin.credential.cert({
     projectId,
     clientEmail,
