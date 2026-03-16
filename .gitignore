@@ -8,3 +8,4 @@ admin-panel/.env
 *.local
 bot/node_modules/
 admin-panel/node_modules/
+serviceAccount.json
