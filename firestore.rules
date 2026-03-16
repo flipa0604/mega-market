@@ -1,0 +1,18 @@
+// Firestore rules — paste into Firebase Console → Firestore → Rules
+// For production, lock down users/orders to server-only and protect products with Auth.
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /products/{id} {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /users/{id} {
+      allow read, write: if true;
+    }
+    match /orders/{id} {
+      allow read, write: if true;
+    }
+  }
+}

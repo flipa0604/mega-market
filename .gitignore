@@ -1,0 +1,10 @@
+node_modules/
+.env
+*.log
+dist/
+admin-panel/dist/
+bot/.env
+admin-panel/.env
+*.local
+bot/node_modules/
+admin-panel/node_modules/

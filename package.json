@@ -1,0 +1,13 @@
+{
+  "name": "mega-market",
+  "version": "1.0.0",
+  "private": true,
+  "description": "E-commerce Telegram Bot + Web Admin Panel",
+  "scripts": {
+    "start": "npm run bot",
+    "bot": "cd bot && node src/index.js",
+    "bot:dev": "cd bot && node --watch src/index.js",
+    "admin": "cd admin-panel && npm run dev",
+    "admin:build": "cd admin-panel && npm run build"
+  }
+}
