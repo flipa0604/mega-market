@@ -78,9 +78,10 @@ async function getProducts() {
 async function getProductsByCategory(categoryId) {
   const snap = await productsRef
     .where('categoryId', '==', categoryId)
-    .orderBy('createdAt', 'desc')
+    .orderBy('createdAt', 'asc')
     .get();
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  return list.reverse();
 }
 
 async function getProduct(id) {
