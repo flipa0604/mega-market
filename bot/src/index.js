@@ -9,7 +9,7 @@ const {
   handleRegLastName,
   handleRegPhone,
 } = require('./handlers/registration');
-const { handleProducts, handleBack } = require('./handlers/menu');
+const { handleProducts, handleCategorySelect, handleBack } = require('./handlers/menu');
 const {
   handleCart,
   handleAddToCart,
@@ -72,6 +72,7 @@ bot.on('location', (ctx, next) => {
   return next();
 });
 
+bot.action(/^cat:(.+)$/, handleCategorySelect);
 bot.action(/^add_cart:(.+)$/, handleAddToCart);
 bot.action(/^remove_cart:(\d+)$/, handleRemoveFromCart);
 bot.action('clear_cart', handleClearCart);

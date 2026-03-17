@@ -1,9 +1,11 @@
 import React from 'react';
 
-function ProductList({ products, onEdit, onDelete }) {
+function ProductList({ products, categories = [], onEdit, onDelete }) {
+  const getCategoryName = (categoryId) => categories.find((c) => c.id === categoryId)?.name || '—';
+
   if (!products.length) {
     return (
-      <p className="loading">No products yet. Click “Add Product” to create one.</p>
+      <p className="loading">Mahsulot yo‘q. “Add Product” orqali qo‘shing.</p>
     );
   }
 
@@ -15,10 +17,11 @@ function ProductList({ products, onEdit, onDelete }) {
             {p.imageUrl ? (
               <img src={p.imageUrl} alt={p.name} />
             ) : (
-              <div className="no-image">No image</div>
+              <div className="no-image">Rasm yo‘q</div>
             )}
           </div>
           <div className="product-card-body">
+            <p className="product-category">📁 {getCategoryName(p.categoryId)}</p>
             <h3 className="product-name">{p.name}</h3>
             <p className="product-price">💰 {p.price}</p>
             {p.shortDescription && (

@@ -67,6 +67,11 @@ function quantityKeyboard(lang) {
     .oneTime();
 }
 
+function categoriesInline(categories, lang) {
+  const buttons = categories.map((c) => [Markup.button.callback(c.name, `cat:${c.id}`)]);
+  return Markup.inlineKeyboard(buttons);
+}
+
 function productInline(productId, lang) {
   const addText = lang === 'uz' ? 'Savatchaga qo\'shish' : 'В корзину';
   return Markup.inlineKeyboard([
@@ -99,6 +104,7 @@ module.exports = {
   backButton,
   backAndCartKeyboard,
   quantityKeyboard,
+  categoriesInline,
   productInline,
   cartInlineKeyboard,
 };

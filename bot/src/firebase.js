@@ -43,8 +43,14 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 const usersRef = db.collection('users');
+const categoriesRef = db.collection('categories');
 const productsRef = db.collection('products');
 const ordersRef = db.collection('orders');
+
+async function getCategories() {
+  const snap = await categoriesRef.orderBy('createdAt', 'asc').get();
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
 
 async function getUser(telegramId) {
   const snap = await usersRef.where('telegramId', '==', String(telegramId)).limit(1).get();
@@ -66,6 +72,14 @@ async function updateUser(userId, data) {
 
 async function getProducts() {
   const snap = await productsRef.orderBy('createdAt', 'desc').get();
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+async function getProductsByCategory(categoryId) {
+  const snap = await productsRef
+    .where('categoryId', '==', categoryId)
+    .orderBy('createdAt', 'desc')
+    .get();
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
@@ -101,12 +115,15 @@ async function createOrder(orderData) {
 module.exports = {
   db,
   usersRef,
+  categoriesRef,
   productsRef,
   ordersRef,
   getUser,
   createUser,
   updateUser,
+  getCategories,
   getProducts,
+  getProductsByCategory,
   getProduct,
   getCart,
   setCart,

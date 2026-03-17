@@ -6,28 +6,50 @@ import {
   updateProduct,
   deleteProduct,
 } from './services/products';
+import {
+  getCategories,
+  addCategory,
+  updateCategory,
+  deleteCategory,
+} from './services/categories';
 import ProductList from './components/ProductList';
 import ProductForm from './components/ProductForm';
+import CategoryList from './components/CategoryList';
 import Login, { isAuthenticated, setAuthenticated } from './components/Login';
 import './App.css';
 
-const STEPS = ['image', 'name', 'price', 'description', 'save'];
+const PRODUCT_STEPS = ['category', 'image', 'name', 'price', 'description', 'save'];
 
 function App() {
   const [auth, setAuth] = useState(() => isAuthenticated());
+  const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [step, setStep] = useState('image');
+  const [step, setStep] = useState('category');
   const [form, setForm] = useState({
+    categoryId: '',
+    categoryName: '',
     imageFile: null,
     imageUrl: '',
     name: '',
     price: '',
     shortDescription: '',
   });
-  const [submitStatus, setSubmitStatus] = useState(''); // 'uploading' | 'saving' | 'done' | 'error'
+  const [submitStatus, setSubmitStatus] = useState('');
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState(null);
+  const [categoryNameInput, setCategoryNameInput] = useState('');
+
+  const loadCategories = async () => {
+    try {
+      const list = await getCategories();
+      setCategories(list);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const loadProducts = async () => {
     setLoading(true);
@@ -40,33 +62,39 @@ function App() {
   };
 
   useEffect(() => {
+    loadCategories();
     loadProducts();
   }, []);
 
   const openAdd = () => {
     setEditingId(null);
     setForm({
+      categoryId: '',
+      categoryName: '',
       imageFile: null,
       imageUrl: '',
       name: '',
       price: '',
       shortDescription: '',
     });
-    setStep('image');
+    setStep('category');
     setSubmitStatus('');
     setFormOpen(true);
   };
 
   const openEdit = (product) => {
     setEditingId(product.id);
+    const cat = categories.find((c) => c.id === product.categoryId);
     setForm({
+      categoryId: product.categoryId || '',
+      categoryName: cat?.name || '',
       imageFile: null,
       imageUrl: product.imageUrl || '',
       name: product.name || '',
       price: product.price ?? '',
       shortDescription: product.shortDescription || '',
     });
-    setStep('image');
+    setStep('category');
     setSubmitStatus('');
     setFormOpen(true);
   };
@@ -74,8 +102,52 @@ function App() {
   const closeForm = () => {
     setFormOpen(false);
     setEditingId(null);
-    setStep('image');
+    setStep('category');
     setSubmitStatus('');
+  };
+
+  const openCategoryAdd = () => {
+    setEditingCategoryId(null);
+    setCategoryNameInput('');
+    setCategoryModalOpen(true);
+  };
+
+  const openCategoryEdit = (cat) => {
+    setEditingCategoryId(cat.id);
+    setCategoryNameInput(cat.name);
+    setCategoryModalOpen(true);
+  };
+
+  const closeCategoryModal = () => {
+    setCategoryModalOpen(false);
+    setEditingCategoryId(null);
+    setCategoryNameInput('');
+  };
+
+  const handleCategorySave = async () => {
+    const name = categoryNameInput.trim();
+    if (!name) return;
+    try {
+      if (editingCategoryId) {
+        await updateCategory(editingCategoryId, name);
+      } else {
+        await addCategory(name);
+      }
+      await loadCategories();
+      closeCategoryModal();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleCategoryDelete = async (id) => {
+    if (!confirm('Kategoriyani o‘chirish? Unga tegishli mahsulotlar kategoriyasiz qoladi.')) return;
+    try {
+      await deleteCategory(id);
+      await loadCategories();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const setFormField = (field, value) => {
@@ -110,9 +182,14 @@ function App() {
       }
     }
 
+    if (!form.categoryId?.trim()) {
+      setSubmitStatus('error');
+      return;
+    }
     setSubmitStatus('saving');
     try {
       const data = {
+        categoryId: form.categoryId.trim(),
         name: form.name.trim(),
         price: priceNum,
         shortDescription: (form.shortDescription || '').trim(),
@@ -166,16 +243,60 @@ function App() {
       </header>
 
       <main className="app-main">
+        <CategoryList
+          categories={categories}
+          onAdd={openCategoryAdd}
+          onEdit={openCategoryEdit}
+          onDelete={handleCategoryDelete}
+        />
         {loading ? (
           <p className="loading">Loading products…</p>
         ) : (
           <ProductList
             products={products}
+            categories={categories}
             onEdit={openEdit}
             onDelete={handleDelete}
           />
         )}
       </main>
+
+      {categoryModalOpen && (
+        <div className="modal-overlay" onClick={closeCategoryModal}>
+          <div className="modal modal-sm" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{editingCategoryId ? 'Kategoriyani tahrirlash' : 'Kategoriya qo‘shish'}</h2>
+              <button type="button" className="btn-close" onClick={closeCategoryModal} aria-label="Close">
+                ×
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Nomi</label>
+                <input
+                  type="text"
+                  value={categoryNameInput}
+                  onChange={(e) => setCategoryNameInput(e.target.value)}
+                  placeholder="Kategoriya nomi"
+                />
+              </div>
+              <div className="form-actions">
+                <button type="button" className="btn btn-ghost" onClick={closeCategoryModal}>
+                  Bekor qilish
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleCategorySave}
+                  disabled={!categoryNameInput.trim()}
+                >
+                  Saqlash
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {formOpen && (
         <div className="modal-overlay" onClick={closeForm}>
@@ -191,6 +312,7 @@ function App() {
               form={form}
               setFormField={setFormField}
               setStep={setStep}
+              categories={categories}
               onImageSelect={handleImageSelect}
               onSave={handleSave}
               submitStatus={submitStatus}

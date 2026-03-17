@@ -56,3 +56,7 @@ If you still get UNAUTHENTICATED:
 - Make sure the JSON is from the **same** Firebase project as your Firestore.
 - In Firebase Console → **Firestore** → check that the project ID matches the JSON `project_id`.
 - Generate a **new** key (old keys can be revoked) and use that new JSON file.
+
+---
+
+**Kategoriyalar:** Bot va admin panel `categories` va `products` (categoryId) ishlatadi. Firestore da `categories` koleksiyasini yaratishingiz shart emas — admin panel birinchi kategoriya qo‘shganda yaratadi. Mahsulotlarni kategoriya bo‘yicha olish uchun `products` da composite index kerak: **categoryId** (Ascending), **createdAt** (Descending). Birinchi marta botda kategoriya tanlanganda Firestore xato va index yaratish havolasini beradi — havolani ochib index yarating.
