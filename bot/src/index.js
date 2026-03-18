@@ -1,7 +1,7 @@
 const { Telegraf } = require('telegraf');
 const config = require('./config');
 const session = require('./session');
-const { LANGUAGES, mainMenu } = require('./keyboards');
+const { LANGUAGES, mainMenu, BTN } = require('./keyboards');
 const { handleStart } = require('./handlers/start');
 const { handleLanguage } = require('./handlers/language');
 const {
@@ -13,8 +13,9 @@ const { handleProducts, handleCategorySelect, handleBack } = require('./handlers
 const {
   handleCart,
   handleAddToCart,
+  handleEditCartQtyStart,
   handleCartQuantity,
-  handleRemoveFromCart,
+  handleEditCartQuantity,
   handleClearCart,
   handleCheckout,
 } = require('./handlers/cart');
@@ -45,19 +46,20 @@ bot.on('text', async (ctx, next) => {
   if (step === 'reg_first_name') return handleRegFirstName(ctx) && next();
   if (step === 'reg_last_name') return handleRegLastName(ctx) && next();
   if (step === 'reg_phone') return next();
+  if (step === 'edit_cart_quantity') return handleEditCartQuantity(ctx) && next();
   if (step === 'add_cart_quantity') return handleCartQuantity(ctx) && next();
 
-  const backUz = '🔙 Orqaga';
-  const backRu = '🔙 Назад';
-  if (text === backUz || text === backRu) return handleBack(ctx) && next();
+  const isBack =
+    text === BTN.uz.back || text === BTN.ru.back;
+  if (isBack) return handleBack(ctx) && next();
 
-  const productsUz = '🛍 Mahsulotlar';
-  const productsRu = '🛍 Товары';
-  if (text === productsUz || text === productsRu) return handleProducts(ctx) && next();
+  const isProducts =
+    text === BTN.uz.products || text === BTN.ru.products;
+  if (isProducts) return handleProducts(ctx) && next();
 
-  const cartUz = '🛒 Savatim';
-  const cartRu = '🛒 Моя корзина';
-  if (text === cartUz || text === cartRu) return handleCart(ctx) && next();
+  const isCart =
+    text === BTN.uz.cart || text === BTN.ru.cart;
+  if (isCart) return handleCart(ctx) && next();
 
   return next();
 });
@@ -74,7 +76,7 @@ bot.on('location', (ctx, next) => {
 
 bot.action(/^cat:(.+)$/, handleCategorySelect);
 bot.action(/^add_cart:(.+)$/, handleAddToCart);
-bot.action(/^remove_cart:(\d+)$/, handleRemoveFromCart);
+bot.action(/^edit_qty:(\d+)$/, handleEditCartQtyStart);
 bot.action('clear_cart', handleClearCart);
 bot.action('checkout_cart', handleCheckout);
 

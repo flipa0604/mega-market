@@ -28,7 +28,9 @@ async function handleCategorySelect(ctx) {
     return;
   }
   for (const p of products) {
-    const caption = `${p.name}\n${p.shortDescription || ''}\n💰 ${p.price}`;
+    const desc = (p.shortDescription || '').trim();
+    const priceLine = lang === 'uz' ? `💰 Narxi: ${p.price} so'm` : `💰 Цена: ${p.price} сум`;
+    const caption = desc ? `${p.name}\n\n${desc}\n\n${priceLine}` : `${p.name}\n\n${priceLine}`;
     const photo = p.imageUrl || undefined;
     if (photo) {
       await ctx.replyWithPhoto(photo, {
