@@ -18,16 +18,15 @@ import CategoryList from './components/CategoryList';
 import Login, { isAuthenticated, setAuthenticated } from './components/Login';
 import './App.css';
 
-const PRODUCT_STEPS = ['category', 'image', 'name', 'price', 'description', 'save'];
-
 function App() {
   const [auth, setAuth] = useState(() => isAuthenticated());
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [step, setStep] = useState('category');
+  const [step, setStep] = useState('image');
   const [form, setForm] = useState({
     categoryId: '',
     categoryName: '',
@@ -41,6 +40,11 @@ function App() {
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [editingCategoryId, setEditingCategoryId] = useState(null);
   const [categoryNameInput, setCategoryNameInput] = useState('');
+
+  const selectedCategory = categories.find((c) => c.id === selectedCategoryId);
+  const productsInCategory = selectedCategoryId
+    ? products.filter((p) => p.categoryId === selectedCategoryId)
+    : [];
 
   const loadCategories = async () => {
     try {
@@ -66,27 +70,36 @@ function App() {
     loadProducts();
   }, []);
 
+  const openCategory = (cat) => {
+    setSelectedCategoryId(cat.id);
+  };
+
+  const backToCategories = () => {
+    setSelectedCategoryId(null);
+  };
+
   const openAdd = () => {
+    if (!selectedCategoryId || !selectedCategory) return;
     setEditingId(null);
     setForm({
-      categoryId: '',
-      categoryName: '',
+      categoryId: selectedCategoryId,
+      categoryName: selectedCategory.name,
       imageFile: null,
       imageUrl: '',
       name: '',
       price: '',
       shortDescription: '',
     });
-    setStep('category');
+    setStep('image');
     setSubmitStatus('');
     setFormOpen(true);
   };
 
   const openEdit = (product) => {
     setEditingId(product.id);
-    const cat = categories.find((c) => c.id === product.categoryId);
+    const cat = categories.find((c) => c.id === product.categoryId) || selectedCategory;
     setForm({
-      categoryId: product.categoryId || '',
+      categoryId: product.categoryId || selectedCategoryId || '',
       categoryName: cat?.name || '',
       imageFile: null,
       imageUrl: product.imageUrl || '',
@@ -94,7 +107,7 @@ function App() {
       price: product.price ?? '',
       shortDescription: product.shortDescription || '',
     });
-    setStep('category');
+    setStep('image');
     setSubmitStatus('');
     setFormOpen(true);
   };
@@ -102,7 +115,7 @@ function App() {
   const closeForm = () => {
     setFormOpen(false);
     setEditingId(null);
-    setStep('category');
+    setStep('image');
     setSubmitStatus('');
   };
 
@@ -144,6 +157,9 @@ function App() {
     if (!confirm('Kategoriyani o‘chirish? Unga tegishli mahsulotlar kategoriyasiz qoladi.')) return;
     try {
       await deleteCategory(id);
+      if (selectedCategoryId === id) {
+        setSelectedCategoryId(null);
+      }
       await loadCategories();
     } catch (err) {
       console.error(err);
@@ -210,7 +226,7 @@ function App() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this product?')) return;
+    if (!confirm('Mahsulotni o‘chirish?')) return;
     try {
       await deleteProduct(id);
       await loadProducts();
@@ -228,14 +244,16 @@ function App() {
     setAuth(false);
   };
 
+  const fixedCategory =
+    selectedCategoryId && selectedCategory
+      ? { id: selectedCategoryId, name: selectedCategory.name }
+      : null;
+
   return (
     <div className="app">
       <header className="app-header">
         <h1>Mega Market — Admin</h1>
         <div className="app-header-actions">
-          <button type="button" className="btn btn-primary" onClick={openAdd}>
-            + Add Product
-          </button>
           <button type="button" className="btn btn-ghost" onClick={handleLogout}>
             Chiqish
           </button>
@@ -243,21 +261,39 @@ function App() {
       </header>
 
       <main className="app-main">
-        <CategoryList
-          categories={categories}
-          onAdd={openCategoryAdd}
-          onEdit={openCategoryEdit}
-          onDelete={handleCategoryDelete}
-        />
-        {loading ? (
-          <p className="loading">Loading products…</p>
-        ) : (
-          <ProductList
-            products={products}
+        {!selectedCategoryId ? (
+          <CategoryList
             categories={categories}
-            onEdit={openEdit}
-            onDelete={handleDelete}
+            onOpenCategory={openCategory}
+            onAdd={openCategoryAdd}
+            onEdit={openCategoryEdit}
+            onDelete={handleCategoryDelete}
           />
+        ) : (
+          <section className="category-products-section">
+            <div className="category-products-header">
+              <button type="button" className="btn btn-ghost back-categories-btn" onClick={backToCategories}>
+                ← Kategoriyalarga qaytish
+              </button>
+              <div className="category-products-title-row">
+                <h2 className="category-products-title">{selectedCategory?.name}</h2>
+                <button type="button" className="btn btn-primary" onClick={openAdd}>
+                  + Mahsulot qo‘shish
+                </button>
+              </div>
+            </div>
+            {loading ? (
+              <p className="loading">Yuklanmoqda…</p>
+            ) : (
+              <ProductList
+                products={productsInCategory}
+                categories={categories}
+                hideCategoryBadge
+                onEdit={openEdit}
+                onDelete={handleDelete}
+              />
+            )}
+          </section>
         )}
       </main>
 
@@ -298,11 +334,11 @@ function App() {
         </div>
       )}
 
-      {formOpen && (
+      {formOpen && fixedCategory && (
         <div className="modal-overlay" onClick={closeForm}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{editingId ? 'Edit Product' : 'Add Product'}</h2>
+              <h2>{editingId ? 'Mahsulotni tahrirlash' : 'Mahsulot qo‘shish'}</h2>
               <button type="button" className="btn-close" onClick={closeForm} aria-label="Close">
                 ×
               </button>
@@ -313,6 +349,7 @@ function App() {
               setFormField={setFormField}
               setStep={setStep}
               categories={categories}
+              fixedCategory={fixedCategory}
               onImageSelect={handleImageSelect}
               onSave={handleSave}
               submitStatus={submitStatus}

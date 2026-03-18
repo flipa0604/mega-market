@@ -1,6 +1,7 @@
 import React from 'react';
 
-const STEPS_ORDER = ['category', 'image', 'name', 'price', 'description', 'save'];
+const STEPS_ALL = ['category', 'image', 'name', 'price', 'description', 'save'];
+const STEPS_NO_CAT = ['image', 'name', 'price', 'description', 'save'];
 
 function ProductForm({
   step,
@@ -8,15 +9,18 @@ function ProductForm({
   setFormField,
   setStep,
   categories,
+  fixedCategory,
   onImageSelect,
   onSave,
   submitStatus,
   editingId,
 }) {
-  const stepIndex = STEPS_ORDER.indexOf(step);
+  const noCat = Boolean(fixedCategory);
+  const stepsNav = noCat ? STEPS_NO_CAT : STEPS_ALL;
+  const stepIndex = stepsNav.indexOf(step);
 
   const goToStep = (s) => {
-    if (STEPS_ORDER.indexOf(s) <= stepIndex + 1) setStep(s);
+    if (stepsNav.indexOf(s) <= Math.max(0, stepIndex) + 1) setStep(s);
   };
 
   const selectCategory = (cat) => {
@@ -25,31 +29,36 @@ function ProductForm({
     setStep('image');
   };
 
+  const labelNum = (s) => {
+    const i = stepsNav.indexOf(s);
+    return i >= 0 ? i + 1 : '';
+  };
+
   return (
     <div className="modal-body">
       <div className="step-nav">
-        {STEPS_ORDER.map((s) => (
+        {stepsNav.map((s) => (
           <button
             key={s}
             type="button"
             className={step === s ? 'active' : ''}
             onClick={() => goToStep(s)}
           >
-            {s === 'category' && '1. Kategoriya'}
-            {s === 'image' && '2. Rasm'}
-            {s === 'name' && '3. Nomi'}
-            {s === 'price' && '4. Narx'}
-            {s === 'description' && '5. Tavsif'}
-            {s === 'save' && '6. Saqlash'}
+            {s === 'category' && `${labelNum(s)}. Kategoriya`}
+            {s === 'image' && `${labelNum(s)}. Rasm`}
+            {s === 'name' && `${labelNum(s)}. Nomi`}
+            {s === 'price' && `${labelNum(s)}. Narx`}
+            {s === 'description' && `${labelNum(s)}. Tavsif`}
+            {s === 'save' && `${labelNum(s)}. Saqlash`}
           </button>
         ))}
       </div>
 
-      {step === 'category' && (
+      {!noCat && step === 'category' && (
         <div className="form-group">
           <label>1. Kategoriyani tanlang</label>
           {!categories?.length ? (
-            <p className="status">Avval kategoriya qo‘shing (yuqorida).</p>
+            <p className="status">Avval kategoriya qo‘shing.</p>
           ) : (
             <div className="category-buttons">
               {categories.map((c) => (
@@ -79,21 +88,17 @@ function ProductForm({
 
       {step === 'image' && (
         <div className="form-group">
-          <label>2. Rasm yuklash (yangi mahsulot uchun majburiy)</label>
+          <label>{labelNum('image')}. Rasm yuklash (yangi mahsulot uchun majburiy)</label>
           <label className="image-upload">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={onImageSelect}
-            />
+            <input type="file" accept="image/*" onChange={onImageSelect} />
             {form.imageUrl ? (
               <img src={form.imageUrl} alt="Preview" className="image-preview" />
             ) : (
-              <span>Click to choose image</span>
+              <span>Rasm tanlang</span>
             )}
           </label>
           {editingId && !form.imageFile && form.imageUrl && (
-            <p className="status">Current image kept. Upload a new file to replace.</p>
+            <p className="status">Joriy rasm saqlanadi. Yangi fayl yuklasangiz almashtiriladi.</p>
           )}
           {(form.imageUrl || form.imageFile) && (
             <button
@@ -105,22 +110,24 @@ function ProductForm({
               Keyingi: Nomi →
             </button>
           )}
-          <div className="form-actions" style={{ marginTop: '0.5rem' }}>
-            <button type="button" className="btn btn-ghost" onClick={() => setStep('category')}>
-              ← Kategoriya
-            </button>
-          </div>
+          {!noCat && (
+            <div className="form-actions" style={{ marginTop: '0.5rem' }}>
+              <button type="button" className="btn btn-ghost" onClick={() => setStep('category')}>
+                ← Kategoriya
+              </button>
+            </div>
+          )}
         </div>
       )}
 
       {step === 'name' && (
         <div className="form-group">
-          <label>3. Mahsulot nomi</label>
+          <label>{labelNum('name')}. Mahsulot nomi</label>
           <input
             type="text"
             value={form.name}
             onChange={(e) => setFormField('name', e.target.value)}
-            placeholder="Product name"
+            placeholder="Mahsulot nomi"
             autoFocus
           />
           <div className="form-actions">
@@ -141,7 +148,7 @@ function ProductForm({
 
       {step === 'price' && (
         <div className="form-group">
-          <label>4. Narx</label>
+          <label>{labelNum('price')}. Narx</label>
           <input
             type="text"
             inputMode="decimal"
@@ -153,11 +160,7 @@ function ProductForm({
             <button type="button" className="btn btn-ghost" onClick={() => setStep('name')}>
               ← Orqaga
             </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => setStep('description')}
-            >
+            <button type="button" className="btn btn-primary" onClick={() => setStep('description')}>
               Keyingi: Tavsif →
             </button>
           </div>
@@ -166,21 +169,17 @@ function ProductForm({
 
       {step === 'description' && (
         <div className="form-group">
-          <label>5. Qisqa tavsif</label>
+          <label>{labelNum('description')}. Qisqa tavsif</label>
           <textarea
             value={form.shortDescription}
             onChange={(e) => setFormField('shortDescription', e.target.value)}
-            placeholder="Short description"
+            placeholder="Qisqa tavsif"
           />
           <div className="form-actions">
             <button type="button" className="btn btn-ghost" onClick={() => setStep('price')}>
               ← Orqaga
             </button>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => setStep('save')}
-            >
+            <button type="button" className="btn btn-primary" onClick={() => setStep('save')}>
               Keyingi: Saqlash →
             </button>
           </div>
@@ -192,7 +191,7 @@ function ProductForm({
           <div className="form-group">
             <p className="status">Tekshirib Firestore ga saqlang.</p>
             <ul style={{ margin: 0, paddingLeft: '1.25rem', color: '#94a3b8', fontSize: '0.875rem' }}>
-              <li>Kategoriya: {form.categoryName || '—'}</li>
+              <li>Kategoriya: {form.categoryName || fixedCategory?.name || '—'}</li>
               <li>Rasm: {form.imageUrl ? '✓' : '—'}</li>
               <li>Nomi: {form.name || '—'}</li>
               <li>Narx: {form.price ?? '—'}</li>
@@ -209,18 +208,18 @@ function ProductForm({
               onClick={onSave}
               disabled={!form.name?.trim() || submitStatus === 'uploading' || submitStatus === 'saving'}
             >
-              {submitStatus === 'uploading' && 'Uploading image…'}
-              {submitStatus === 'saving' && 'Saving…'}
+              {submitStatus === 'uploading' && 'Yuklanmoqda…'}
+              {submitStatus === 'saving' && 'Saqlanmoqda…'}
               {(submitStatus === 'done' || !submitStatus) && (editingId ? 'Tahrirlash' : 'Saqlash')}
-              {submitStatus === 'error' && 'Retry'}
+              {submitStatus === 'error' && 'Qayta urinish'}
             </button>
           </div>
           {submitStatus && (
             <p className={`status ${submitStatus}`}>
-              {submitStatus === 'uploading' && 'Uploading image to Firebase Storage…'}
-              {submitStatus === 'saving' && 'Saving to Firestore…'}
-              {submitStatus === 'done' && 'Saved.'}
-              {submitStatus === 'error' && 'Error. Check console and try again.'}
+              {submitStatus === 'uploading' && 'Rasm Storage ga yuklanmoqda…'}
+              {submitStatus === 'saving' && 'Firestore ga yozilmoqda…'}
+              {submitStatus === 'done' && 'Saqlandi.'}
+              {submitStatus === 'error' && 'Xato. Konsolni tekshiring.'}
             </p>
           )}
         </>

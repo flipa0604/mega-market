@@ -1,11 +1,11 @@
 import React from 'react';
 
-function ProductList({ products, categories = [], onEdit, onDelete }) {
+function ProductList({ products, categories = [], hideCategoryBadge, onEdit, onDelete }) {
   const getCategoryName = (categoryId) => categories.find((c) => c.id === categoryId)?.name || '—';
 
   if (!products.length) {
     return (
-      <p className="loading">Mahsulot yo‘q. “Add Product” orqali qo‘shing.</p>
+      <p className="loading">Bu kategoriyada mahsulot yo‘q. «Mahsulot qo‘shish» tugmasidan foydalaning.</p>
     );
   }
 
@@ -21,7 +21,9 @@ function ProductList({ products, categories = [], onEdit, onDelete }) {
             )}
           </div>
           <div className="product-card-body">
-            <p className="product-category">📁 {getCategoryName(p.categoryId)}</p>
+            {!hideCategoryBadge && (
+              <p className="product-category">📁 {getCategoryName(p.categoryId)}</p>
+            )}
             <h3 className="product-name">{p.name}</h3>
             <p className="product-price">💰 {p.price}</p>
             {p.shortDescription && (
