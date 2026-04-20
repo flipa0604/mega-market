@@ -2,6 +2,8 @@ require('dotenv').config();
 
 module.exports = {
   botToken: process.env.BOT_TOKEN,
+  /** HTTPS do‘kon (Telegram Web App). Masalan: https://nodirmega.uz */
+  shopUrl: (process.env.SHOP_URL || '').trim() || 'https://nodirmega.uz',
   adminTelegramId: process.env.ADMIN_TELEGRAM_ID
     ? parseInt(process.env.ADMIN_TELEGRAM_ID, 10)
     : null,
