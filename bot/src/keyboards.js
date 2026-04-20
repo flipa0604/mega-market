@@ -1,13 +1,12 @@
 const { Markup } = require('telegraf');
+const config = require('./config');
 
 const BTN = {
   uz: {
-    products: '🟩 🛍 Mahsulotlar',
     cart: '🟪 🛒 Savatim',
     back: '🟦 🔙 Orqaga',
   },
   ru: {
-    products: '🟩 🛍 Товары',
     cart: '🟪 🛒 Моя корзина',
     back: '🟦 🔙 Назад',
   },
@@ -42,8 +41,10 @@ function requestLocation(lang) {
 
 function mainMenu(lang) {
   const b = lang === 'ru' ? BTN.ru : BTN.uz;
+  const shopLabel = lang === 'ru' ? '🛍 Магазин' : "🛍 Do'kon";
+  const shopUrl = (config.shopUrl || '').replace(/\/$/, '') || 'https://nodirmega.uz';
   return Markup.keyboard([
-    [Markup.button.text(b.products)],
+    [Markup.button.webApp(shopLabel, shopUrl)],
     [Markup.button.text(b.cart)],
   ])
     .resize()
@@ -77,21 +78,6 @@ function quantityKeyboard(lang) {
     .oneTime();
 }
 
-function categoriesInline(categories, lang) {
-  const prefix = lang === 'ru' ? '🟣 📁 ' : '🟣 📁 ';
-  const buttons = categories.map((c) => [
-    Markup.button.callback(`${prefix}${c.name}`, `cat:${c.id}`),
-  ]);
-  return Markup.inlineKeyboard(buttons);
-}
-
-function productInline(productId, lang) {
-  const addText = lang === 'uz' ? '🟢 ➕ Savatchaga qo\'shish' : '🟢 ➕ В корзину';
-  return Markup.inlineKeyboard([
-    [Markup.button.callback(addText, `add_cart:${productId}`)],
-  ]);
-}
-
 function cartInlineKeyboard(lang, itemCount) {
   const isUz = lang === 'uz';
   const editPrefix = isUz ? "🟡 O'zgartirish" : '🟡 Изменить';
@@ -118,7 +104,5 @@ module.exports = {
   backButton,
   backAndCartKeyboard,
   quantityKeyboard,
-  categoriesInline,
-  productInline,
   cartInlineKeyboard,
 };

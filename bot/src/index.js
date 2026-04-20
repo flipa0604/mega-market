@@ -9,12 +9,10 @@ const {
   handleRegLastName,
   handleRegPhone,
 } = require('./handlers/registration');
-const { handleProducts, handleCategorySelect, handleBack } = require('./handlers/menu');
+const { handleBack } = require('./handlers/menu');
 const {
   handleCart,
-  handleAddToCart,
   handleEditCartQtyStart,
-  handleCartQuantity,
   handleEditCartQuantity,
   handleClearCart,
   handleCheckout,
@@ -47,15 +45,10 @@ bot.on('text', async (ctx, next) => {
   if (step === 'reg_last_name') return handleRegLastName(ctx) && next();
   if (step === 'reg_phone') return next();
   if (step === 'edit_cart_quantity') return handleEditCartQuantity(ctx) && next();
-  if (step === 'add_cart_quantity') return handleCartQuantity(ctx) && next();
 
   const isBack =
     text === BTN.uz.back || text === BTN.ru.back;
   if (isBack) return handleBack(ctx) && next();
-
-  const isProducts =
-    text === BTN.uz.products || text === BTN.ru.products;
-  if (isProducts) return handleProducts(ctx) && next();
 
   const isCart =
     text === BTN.uz.cart || text === BTN.ru.cart;
@@ -74,8 +67,6 @@ bot.on('location', (ctx, next) => {
   return next();
 });
 
-bot.action(/^cat:(.+)$/, handleCategorySelect);
-bot.action(/^add_cart:(.+)$/, handleAddToCart);
 bot.action(/^edit_qty:(\d+)$/, handleEditCartQtyStart);
 bot.action('clear_cart', handleClearCart);
 bot.action('checkout_cart', handleCheckout);
